@@ -1,0 +1,82 @@
+// 酒店数据索引库,包含自定义的拼音分词器，
+PUT /hotel
+{
+  "settings": { #定义索引库的分词器
+    "analysis": {
+      "analyzer": {
+        "text_anlyzer": {  #自定义的分词器名称
+          "tokenizer": "ik_max_word",
+          "filter": "py" #自定义的拼音过滤器
+        },
+        "completion_analyzer": { #自定义的自动补全分词器名称
+          "tokenizer": "keyword", #keyword表示不分词
+          "filter": "py"
+        }
+      },
+      "filter": {
+        "py": {
+          "type": "pinyin",
+          "keep_full_pinyin": false, #表示不需要每个字拆分，比如【刘德华】-【liu】 【de】 【hua】
+          "keep_joined_full_pinyin": true,#根据中文分词后的词来拼音，比如【刘德华】-【liudehua】
+          "keep_original": true,
+          "limit_first_letter_length": 16,
+          "remove_duplicated_term": true, #跳过重复的词条
+          "none_chinese_pinyin_tokenize": false
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id":{
+        "type": "keyword"
+      },
+      "name":{
+        "type": "text",
+        "analyzer": "text_anlyzer", #表示用自定义的分词器，先中文拆分，在拆分后做拼音，索引库中就有中文和英文
+        "search_analyzer": "ik_smart",#表示搜索时只用中文分词器搜索，这样用户输入狮子时，不回把虱子也搜索处理，因为用text_anlyzer会搜索shizi
+        "copy_to": "all"
+      },
+      "address":{
+        "type": "keyword",
+        "index": false
+      },
+      "price":{
+        "type": "integer"
+      },
+      "score":{
+        "type": "integer"
+      },
+      "brand":{
+        "type": "keyword",
+        "copy_to": "all"
+      },
+      "city":{
+        "type": "keyword"
+      },
+      "starName":{
+        "type": "keyword"
+      },
+      "business":{
+        "type": "keyword",
+        "copy_to": "all"
+      },
+      "location":{
+        "type": "geo_point"
+      },
+      "pic":{
+        "type": "keyword",
+        "index": false
+      },
+      "all":{
+        "type": "text",
+        "analyzer": "text_anlyzer",  #表示用自定义的分词器，先中文拆分，在拆分后做拼音，索引库中就有中文和英文
+        "search_analyzer": "ik_smart" #表示搜索时只用中文分词器搜索，这样用户输入狮子时，不回把虱子也搜索处理，因为用text_anlyzer会搜索shizi
+      },
+      "suggestion":{ #搜索时自动补全
+          "type": "completion", #自动补全类型必须是completion
+          "analyzer": "completion_analyzer" #自定义的分词器名称，不分词，直接转拼音
+      }
+    }
+  }
+}
