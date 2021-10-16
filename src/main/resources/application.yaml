@@ -6,6 +6,12 @@ spring:
     username: root
     password: warrior_520
     driver-class-name: com.mysql.cj.jdbc.Driver
+  rabbitmq:
+    host: 192.168.57.131
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
 logging:
   level:
     com.block: debug
