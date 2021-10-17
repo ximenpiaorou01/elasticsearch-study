@@ -10,12 +10,15 @@ import com.block.elasticsearch.pojo.PageResult;
 import com.block.elasticsearch.pojo.RequestParam;
 import com.block.elasticsearch.service.IHotelService;
 import org.apache.lucene.search.TotalHits;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.unit.DistanceUnit;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
@@ -160,6 +163,46 @@ public class HotelService extends ServiceImpl<HotelMapper, Hotel> implements IHo
             //根据上面自定义名称解析
             CompletionSuggestion hotelSuggestion = suggest.getSuggestion("hotelSuggestion");
             return hotelSuggestion.getOptions().stream().map(s->s.getText().toString()).collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 根据id新增或修改索引库中的
+     * @param id 酒店id
+     */
+    @Override
+    public void insertById(Long id) {
+        try {
+            //1.准备Request
+            //1.1 根据id去数据库查询新增或修改的hotel信息
+            Hotel hotel = getById(id);
+            //封装成ES存储的HotelDoC类型
+            HotelDoc hotelDoc = new HotelDoc(hotel);
+            //2.准备DSL
+            IndexRequest indexRequest = new IndexRequest("hotel").id(id.toString());
+            //准备JSON文档
+            indexRequest.source(JSON.toJSONString(hotelDoc), XContentType.JSON);
+
+            //3.发送请求
+            client.index(indexRequest,RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 根据id删除索引库中的doc
+     * @param id 酒店id
+     */
+    @Override
+    public void deleteById(Long id) {
+        try {
+            //1.准备Request
+            DeleteRequest deleteRequest = new DeleteRequest("hotel", id.toString());
+            //2.发送请求
+            client.delete(deleteRequest,RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

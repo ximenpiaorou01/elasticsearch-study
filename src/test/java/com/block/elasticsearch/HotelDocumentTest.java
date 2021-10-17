@@ -45,7 +45,7 @@ class HotelDocumentTest {
         //需要转换为文档类型，把hotel中的longitude和latitude转换为索引库中的location字段
         HotelDoc hotelDoc = new HotelDoc(hotel);
 
-        // 1.查询数据库hotel数据
+        // 1.查询索引库hotel数据
         IndexRequest request = new IndexRequest("hotel").id(hotel.getId().toString());
         //2.把数据转出json
         request.source(JSON.toJSONString(hotelDoc),XContentType.JSON);
